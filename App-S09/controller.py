@@ -23,74 +23,176 @@
 import config as cf
 import model
 import csv
-import time
 from datetime import datetime
+import datetime as datetime
+import time
+import tracemalloc
 
 """
 El controlador se encarga de mediar entre la vista y el modelo.
 """
-
 # Inicialización del Catálogo de libros
+
 def newController():
-    """
-    Crea una instancia del modelo
-    """
-    control = model.newAnalyzer('ARRAY_LIST')
-    return control
+    analyzer={
+        "model":None
+    }
+    analyzer["model"]=model.NewCatalog()
+    return analyzer
 
 # Funciones para la carga de datos
-def loadData(analyzer, sizeFile):
-    contentFile = cf.data_dir + 'Speedruns//game_data_utf-8-' + str(sizeFile) + '.csv'
-    inputFile = csv.DictReader(open(contentFile, encoding="utf-8"), delimiter=",")
-    for game in inputFile:
-        model.addRegister(analyzer, game, 'game')
-    contentFile = cf.data_dir + 'Speedruns//category_data_utf-8-' + str(sizeFile) + '.csv'
-    inputFile = csv.DictReader(open(contentFile, encoding="utf-8"), delimiter=",")
-    for register in inputFile:
-        model.addRegister(analyzer, register, 'speedrun')
+
+def loadData(analyzer,muestra): 
+    start_time = getTime()
+    tracemalloc.start()
+    start_memory = getMemory()
+    loadDatas(analyzer,muestra)
+    stop_time = getTime()
+    delta_time = deltaTime(stop_time, start_time)
+    stop_memory = getMemory()
+    tracemalloc.stop()
+    delta_memory = deltaMemory(stop_memory, start_memory)
+    return analyzer,(delta_time,delta_memory)
+    
+
+
+
+def loadDatas(catalog,muestra):
+    opcion=['5pct','10pct','20pct','30pct','50pct','80pct','large','small']
+    gamesfile2= cf.data_dir + 'Speedruns/game_data_utf-8-'+ opcion[muestra-1] +'.csv'
+    input_file2= csv.DictReader (open(gamesfile2, encoding='utf-8'))
+    for game in input_file2:  
+        game['Release_Date'] = str(datetime.datetime.strptime(game['Release_Date'],'%y-%m-%d'))[:10]
+        model.AddGameData(catalog['model'], game)
+    gamesfile1= cf.data_dir + 'Speedruns/category_data_urf-8-'+ opcion[muestra-1] +'.csv'
+    input_file1= csv.DictReader (open(gamesfile1, encoding='utf-8'))
+    for game in input_file1:  
+        name = model.getId(catalog['model'],game['Game_Id'])
+        game['Name']=name['Name']
+        game['Lanzamiento'] = name['AnioLanzamiento']
+        game['plataforma'] = name['plataforma']
+        model.AddCategorys(catalog['model'], game)
+
+
 
 # Funciones de ordenamiento
-def firstAndLastThreeData(lista):
-    return model.firstAndLastThreeData(lista)
 
 # Funciones de consulta sobre el catálogo
-def getGamesByPlatformInDate(analyzer, platform, initialDate, finalDate):
-    platform = platform.title()
-    initialDate = datetime.strptime(initialDate, '%Y-%m-%d')
-    finalDate = datetime.strptime(finalDate, '%Y-%m-%d')
-    return model.getGamesByPlatformInDate(analyzer, platform, initialDate, finalDate)
+def GetRangodeFechas(catalogo,plataforma,limite_inf,limite_max):
+    start_time = getTime()
+    tracemalloc.start()
+    start_memory = getMemory()
+    resultado = model.GetRangodeFechas(catalogo['model'],plataforma,limite_inf,limite_max)
+    stop_time = getTime()
+    delta_time = deltaTime(stop_time, start_time)
+    stop_memory = getMemory()
+    tracemalloc.stop()
+    delta_memory = deltaMemory(stop_memory, start_memory)
+    return resultado,(delta_time,delta_memory)
 
-def getRegistersByPlayer(analyzer, player):
-    player = player.title()
-    return model.getRegistersByPlayer(analyzer, player)
+def GetTiemposLentos(catalogo,limite_inf,limite_max):
+    start_time = getTime()
+    tracemalloc.start()
+    start_memory = getMemory()
+    resultado =  model.GetTiemposPequeños(catalogo['model'],limite_inf,limite_max)
+    stop_time = getTime()
+    delta_time = deltaTime(stop_time, start_time)
+    stop_memory = getMemory()
+    tracemalloc.stop()
+    delta_memory = deltaMemory(stop_memory, start_memory)
+    return resultado,(delta_time,delta_memory)
 
-def getFasterRecords(analyzer,lim_inf, lim_sup):
-    return model.getFasterRecords(analyzer,lim_inf, lim_sup)
+def GetTiemposRecord(catalogo, limite_superior, limite_inferior): 
+    start_time = getTime()
+    tracemalloc.start()
+    start_memory = getMemory()
+    resultado =  model.getRegistrosRecientes(catalogo['model'], limite_inferior, limite_superior)
+    stop_time = getTime()
+    delta_time = deltaTime(stop_time, start_time)
+    stop_memory = getMemory()
+    tracemalloc.stop()
+    delta_memory = deltaMemory(stop_memory, start_memory)    
+    return resultado,(delta_time,delta_memory)
 
-def getRegistersByDates(analyzer, initialDate, finalDate):
-    initialDate = datetime.strptime(initialDate, '%Y-%m-%dT%H:%M:%SZ')
-    finalDate = datetime.strptime(finalDate, '%Y-%m-%dT%H:%M:%SZ')
-    return model.getRegistersByDates(analyzer, initialDate, finalDate)
+def getRangodeIntentos(catalog,plataforma,intento1,intento2):
+    start_time = getTime()
+    tracemalloc.start()
+    start_memory = getMemory()
+    resultado = model.getRangodeIntentos(catalog["model"],plataforma,intento1,intento2)
+    stop_time = getTime()
+    delta_time = deltaTime(stop_time, start_time)
+    stop_memory = getMemory()
+    tracemalloc.stop()
+    delta_memory = deltaMemory(stop_memory, start_memory)
+    return resultado,(delta_time,delta_memory)
 
-def getRegistersByRange(analyzer, minTime, maxTime):
-    return model.getRegistersByRange(analyzer, minTime, maxTime)
+def getTiemposVeloces(catalog,intento1,intento2):
+    start_time = getTime()
+    tracemalloc.start()
+    start_memory = getMemory()
+    resultado = model.getTiemposVeloces(catalog["model"],intento1,intento2)
+    stop_time = getTime()
+    delta_time = deltaTime(stop_time, start_time)
+    stop_memory = getMemory()
+    tracemalloc.stop()
+    delta_memory = deltaMemory(stop_memory, start_memory)
+    return resultado,(delta_time,delta_memory)
 
-def histogramByReleaseYears(analyzer, initialYear, finalYear, feature, numberSegments, numberLevels):
-    return model.histogramByReleaseYears(analyzer, initialYear, finalYear, feature, numberSegments, numberLevels)
+def getPlayers(catalogo,nombre):
+    start_time = getTime()
+    tracemalloc.start()
+    start_memory = getMemory()
+    resultado = model.getPlayersTimes(catalogo['model'],nombre)
+    stop_time = getTime()
+    delta_time = deltaTime(stop_time, start_time)
+    stop_memory = getMemory()
+    tracemalloc.stop()
+    delta_memory = deltaMemory(stop_memory, start_memory)
+    return resultado,(delta_time,delta_memory)
 
-def getTopNByProfitableVideogamesInPlatform(analyzer, platform, N):
-    platform = platform.title()
-    return model.getTopNByProfitableVideogamesInPlatform(analyzer, platform, N)
+def getHistogram(catalog,inferior,mayor,opcion):
+    start_time = getTime()
+    tracemalloc.start()
+    start_memory = getMemory()
+    resultado =  model.getAverageYears(catalog['model'],inferior,mayor,opcion)
+    stop_time = getTime()
+    delta_time = deltaTime(stop_time, start_time)
+    stop_memory = getMemory()
+    tracemalloc.stop()
+    delta_memory = deltaMemory(stop_memory, start_memory)
+    return resultado,(delta_time,delta_memory)
 
-def graphAttempsByCountriesInRangeOfYears(analyzer, year, timeInf, timeSup):
-    return model.graphAttempsByCountriesInRangeOfYears(analyzer, year, timeInf, timeSup)
+def getMapa(catalog,anio,lim_inf,lim_sup):
+    start_time = getTime()
+    tracemalloc.start()
+    start_memory = getMemory()
+    resultado =  model.MapaInteractivoInformacion(catalog['model'],anio,lim_inf,lim_sup)
+    stop_time = getTime()
+    delta_time = deltaTime(stop_time, start_time)
+    stop_memory = getMemory()
+    tracemalloc.stop()
+    delta_memory = deltaMemory(stop_memory, start_memory)
+    return resultado,(delta_time,delta_memory)
 
-# Funciones para medir tiempos de ejecucion
+def getPlataforma(catalogo, plataforma): 
+    start_time = getTime()
+    tracemalloc.start()
+    start_memory = getMemory()
+    resultado = model.getPlataforma(catalogo['model'], plataforma)
+    stop_time = getTime()
+    delta_time = deltaTime(stop_time, start_time)
+    stop_memory = getMemory()
+    tracemalloc.stop()
+    delta_memory = deltaMemory(stop_memory, start_memory)
+    return resultado,(delta_time,delta_memory)
+
+#Funciones de tiempo y memoria
 def getTime():
     """
     devuelve el instante tiempo de procesamiento en milisegundos
     """
     return float(time.perf_counter()*1000)
+
 
 def deltaTime(end, start):
     """
@@ -98,3 +200,24 @@ def deltaTime(end, start):
     """
     elapsed = float(end - start)
     return elapsed
+
+def getMemory():
+    """
+    toma una muestra de la memoria alocada en instante de tiempo
+    """
+    return tracemalloc.take_snapshot()
+
+
+def deltaMemory(stop_memory, start_memory):
+    """
+    calcula la diferencia en memoria alocada del programa entre dos
+    instantes de tiempo y devuelve el resultado en bytes (ej.: 2100.0 B)
+    """
+    memory_diff = stop_memory.compare_to(start_memory, "filename")
+    delta_memory = 0.0
+    # suma de las diferencias en uso de memoria
+    for stat in memory_diff:
+        delta_memory = delta_memory + stat.size_diff
+    # de Byte -> kByte
+    delta_memory = delta_memory/1024.0
+    return delta_memory
