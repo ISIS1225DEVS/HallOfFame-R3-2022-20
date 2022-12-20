@@ -1,1 +1,2 @@
-﻿# TODO aqui va la carpeta con los el subconjunto -small del reto
+﻿datos originales de:
+Game Speedrun Records, URL: https://www.kaggle.com/datasets/matheusturatti/game-speedrun-records 
